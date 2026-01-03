@@ -1,92 +1,74 @@
- <!DOCTYPE html>
-<html lang="ta">
+
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Simple Audio Player</title>
+  <title>Radio Player</title>
   <style>
-    body { font-family: Arial; padding: 20px; background: #111; color: #eee; }
-    #player { margin: 20px 0; }
-    ul { list-style: none; padding: 0; }
-    li { padding: 10px; cursor: pointer; border-bottom: 1px solid #444; }
-    li.active { background: #333; }
-    button { margin: 5px; padding: 8px 16px; }
+    body { margin:0; font-family:Arial; background:#000; color:#0f0; text-align:center; padding:20px; }
+    #now { font-size:24px; margin:20px; color:#0f0; }
+    #art { width:200px; height:200px; border-radius:50%; border:3px solid #0f0; margin:20px auto; background:#111; }
+    button { background:#111; color:#0f0; border:2px solid #0f0; padding:10px 20px; margin:10px; cursor:pointer; font-size:18px; }
+    button:hover { background:#0f0; color:#000; }
+    progress { width:80%; height:10px; margin:10px; }
+    marquee { font-size:18px; color:#0f0; }
   </style>
 </head>
 <body>
 
-  <audio id="audio"></audio>
+  <h1>Radio Player</h1>
+  <div id="art"></div>
+  <div id="now">Loading station...</div>
+  <marquee>Streaming your library...</marquee>
 
-  <div id="player">
-    <h3 id="now-playing">Song loading...</h3>
-    <div>
-      <button onclick="playPause()">Play/Pause</button>
-      <button onclick="prev()">Prev</button>
-      <button onclick="next()">Next</button>
-    </div>
-    <progress id="progress" value="0" max="100"></progress>
+  <audio id="audio" preload="auto"></audio>
+
+  <div>
+    <button onclick="playPause()">Play / Pause</button>
+    <button onclick="prev()">Prev</button>
+    <button onclick="next()">Next</button>
   </div>
 
-  <ul id="playlist">
-    <li data-src="Unnai Naan.m4a">Song 1 - Artist</li>
-    <li data-src="Vaarai En Thozhi.m4a">Song 2 - Artist</li>
-    <li data-src="Yen Endra Kelvi.m4a">Song 3 - Artist</li>
-    <!-- இங்க உன் songs-ஐ add பண்ணு -->
+  <progress id="prog" value="0" max="100"></progress>
+
+  <ul id="list" style="display:none;">
+    <li data-src="Unnai Naan.m4a">Track 1 - Artist</li>
+    <li data-src="Vaarai En Thozhi.m4a">Track 2 - Artist</li>
+    <li data-src="Yen Endra Kelvi.m4a">Track 3 - Artist</li>
+    <!-- Add more <li data-src="filename.mp3">Song Name</li> here -->
   </ul>
 
 <script>
   const audio = document.getElementById('audio');
-  const playlist = document.getElementById('playlist');
-  const items = playlist.getElementsByTagName('li');
-  const nowPlaying = document.getElementById('now-playing');
-  const progress = document.getElementById('progress');
+  const now = document.getElementById('now');
+  const prog = document.getElementById('prog');
+  const items = document.querySelectorAll('#list li');
+  let idx = 0;
 
-  let current = 0;
-
-  function loadSong(index) {
-    if (index >= items.length) return;
-    const src = items[index].getAttribute('data-src');
+  function load(i) {
+    if (i >= items.length) i = 0;
+    const src = items[i].getAttribute('data-src');
     audio.src = src;
-    nowPlaying.textContent = items[index].textContent;
-    for (let li of items) li.classList.remove('active');
-    items[index].classList.add('active');
-    audio.play();
+    now.textContent = items[i].textContent;
+    audio.play().catch(()=>{});
+    idx = i;
   }
 
-  function next() {
-    current = (current + 1) % items.length;
-    loadSong(current);
-  }
-
-  function prev() {
-    current = (current - 1 + items.length) % items.length;
-    loadSong(current);
-  }
+  function next() { idx = (idx + 1) % items.length; load(idx); }
+  function prev() { idx = (idx - 1 + items.length) % items.length; load(idx); }
 
   function playPause() {
     if (audio.paused) audio.play();
     else audio.pause();
   }
 
-  audio.addEventListener('ended', next);
+  audio.onended = next;
+  audio.ontimeupdate = () => {
+    if (audio.duration) prog.value = (audio.currentTime / audio.duration) * 100;
+  };
 
-  audio.addEventListener('timeupdate', () => {
-    if (audio.duration) {
-      progress.value = (audio.currentTime / audio.duration) * 100;
-    }
-  });
-
-  // click பண்ணினா அந்த song play ஆகும்
-  playlist.addEventListener('click', e => {
-    if (e.target.tagName === 'LI') {
-      current = Array.from(items).indexOf(e.target);
-      loadSong(current);
-    }
-  });
-
-  // முதல் song load பண்ணு
-  loadSong(0);
+  // Start radio
+  load(0);
 </script>
-
 </body>
 </html>
-
