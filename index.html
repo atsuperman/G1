@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Audio Player</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #111; color: #eee; }
+    #player { margin: 20px 0; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 10px; cursor: pointer; border-bottom: 1px solid #444; }
+    li.active { background: #333; }
+    button { margin: 5px; padding: 8px 16px; }
+  </style>
+</head>
+<body>
+
+  <audio id="audio"></audio>
+
+  <div id="player">
+    <h3 id="now-playing">Song loading...</h3>
+    <div>
+      <button onclick="playPause()">Play/Pause</button>
+      <button onclick="prev()">Prev</button>
+      <button onclick="next()">Next</button>
+    </div>
+    <progress id="progress" value="0" max="100"></progress>
+  </div>
+
+  <ul id="playlist">
+    <li data-src="song1.mp3">Song 1 - Artist</li>
+    <li data-src="song2.mp3">Song 2 - Artist</li>
+    <li data-src="song3.mp3">Song 3 - Artist</li>
+    <!-- இங்க உன் songs-ஐ add பண்ணு -->
+  </ul>
+
+<script>
+  const audio = document.getElementById('audio');
+  const playlist = document.getElementById('playlist');
+  const items = playlist.getElementsByTagName('li');
+  const nowPlaying = document.getElementById('now-playing');
+  const progress = document.getElementById('progress');
+
+  let current = 0;
+
+  function loadSong(index) {
+    if (index >= items.length) return;
+    const src = items[index].getAttribute('data-src');
+    audio.src = src;
+    nowPlaying.textContent = items[index].textContent;
+    for (let li of items) li.classList.remove('active');
+    items[index].classList.add('active');
+    audio.play();
+  }
+
+  function next() {
+    current = (current + 1) % items.length;
+    loadSong(current);
+  }
+
+  function prev() {
+    current = (current - 1 + items.length) % items.length;
+    loadSong(current);
+  }
+
+  function playPause() {
+    if (audio.paused) audio.play();
+    else audio.pause();
+  }
+
+  audio.addEventListener('ended', next);
+
+  audio.addEventListener('timeupdate', () => {
+    if (audio.duration) {
+      progress.value = (audio.currentTime / audio.duration) * 100;
+    }
+  });
+
+  // click பண்ணினா அந்த song play ஆகும்
+  playlist.addEventListener('click', e => {
+    if (e.target.tagName === 'LI') {
+      current = Array.from(items).indexOf(e.target);
+      loadSong(current);
+    }
+  });
+
+  // முதல் song load பண்ணு
+  loadSong(0);
+</script>
+
+</body>
+</html>
